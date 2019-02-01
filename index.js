@@ -1,4 +1,4 @@
-/**
+ /**
  * Decred Ticket Auto Splitter buys split Decred tickets in a set increment.
  *
  * This program will loop constantly until killed by the user. It will deplete ALL funds in the wallet if left to its
@@ -216,7 +216,7 @@ const main = async function() {
 
             while (await hasFunds(result.buyAmount)) {
                 await runOnce(result.password, result.buyAmount);
-                console.log('ok done');
+                console.log("Taking " + sleepInterval + " seconds before trying again.");
                 await sleep(sleepInterval);
             }
             console.log("Your funds are depleted. Exiting program.");
