@@ -1,0 +1,15 @@
+{
+  "name": "auto_split",
+  "version": "1.0.0",
+  "description": "Automatically splits decred tickets",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tessellated Geometry, LLC",
+  "license": "MIT",
+  "dependencies": {
+    "prompt": "^1.0.0",
+    "readline": "^1.3.0"
+  }
+}
