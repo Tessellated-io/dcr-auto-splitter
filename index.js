@@ -44,7 +44,7 @@ const matcherHost = "decredvoting.com"; // TODO: make this configurable.
  * Prints the programs prelude and asks for consent.
  */
 const printPrelude = async function() {
-    console.log("Welcome to Decred Ticket Auto Splitter + " (v; " + version + ";)");
+    console.log("Welcome to Decred Ticket Auto Splitter " +  "( " + version + ";)");
     console.log("");
     printBold("Any software that you supply your wallet passphrase to can potentially steal your funds.\n" +
         "Please make sure you know what you are doing.");
