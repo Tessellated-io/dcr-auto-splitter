@@ -1,11 +1,10 @@
 /**
- * Decred Ticket Auto Splitter  buys split decred tickets in increments of 5 DCR.
+ * Decred Ticket Auto Splitter buys split Decred tickets in a set increment.
  *
  * This program will loop constantly until killed by the user. It will deplete ALL funds in the wallet if left to its
  * own devices.
  *
  * PLEASE NOTE THE FOLLOWING BEFORE RUNNING THE PROGRAM:
- * - The buying increment is 5 DCR.
  * - The stakepool being used is 'decredvoting.com'.
  * - The split group is 'decredvoting1'
  * - The source wallet is the first wallet in the open wallet.
@@ -43,9 +42,6 @@ const splitBuyerProgram = "splitticketbuyer";
 
 /** The name of the drcctl executable. */
 const dcrctlProgram = "dcrctl";
-
-/** The amount of DCR to buy in a split ticket. */
-const buyAmount = 5; // TODO: Make configurable.
 
 /** The minimum buyAmount of funds needed. */
 const minAmount = 5;
@@ -102,27 +98,30 @@ const getPassword = async function() {
         var schema = {
             properties: {
                 password: {
-                    message: " ",
+                    message: "Please enter your wallet passphrase:",
                     hidden: true
-                }
+                },
+                buyAmount: {
+                    message: "Please enter the amount of DCR to buy in each ticket split:",
+                },
             }
         };
 
         console.log("Your wallet passphrase is stored in memory and not persisted.");
-        prompt.message = "Please enter your wallet passphrase:";
+        prompt.message = "";
         prompt.delimiter = "";
         prompt.start();
         prompt.get(schema, function (err, result) {
             if (err) {
                 reject(err);
             }
-            resolve(result.password);
+            resolve(result);
         });
     });
 };
 
 /** Run splitticketbuyer one time. */
-const runOnce = async function(password) {
+const runOnce = async function(password, buyAmount) {
     return new Promise(function(resolve) {
         const args = [
             "--pass=" + password,
@@ -139,7 +138,7 @@ const runOnce = async function(password) {
 };
 
 /** Check if the the user has funds left to keep buying. */
-const hasFunds = async function() {
+const hasFunds = async function(buyAmount) {
     const result = spawnSync(dcrctlProgram, ["--wallet", "getbalance"]);
 
     // Parse program output to a JSON object.
@@ -213,10 +212,10 @@ const main = async function() {
     const userConsented = await printPrelude();
     if (userConsented) {
         try {
-           const password = await getPassword();
+           const result = await getPassword();
 
-            while (await hasFunds()) {
-                await runOnce();
+            while (await hasFunds(result.buyAmount)) {
+                await runOnce(result.password, result.buyAmount);
                 console.log('ok done');
                 await sleep(sleepInterval);
             }
