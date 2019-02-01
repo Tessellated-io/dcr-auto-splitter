@@ -84,4 +84,7 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
+# Webstorm
+.idea
+
 # End of https://www.gitignore.io/api/node
