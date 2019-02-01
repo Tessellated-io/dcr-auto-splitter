@@ -26,8 +26,6 @@ const readline = require('readline').createInterface({
     output: process.stdout
 });
 const prompt = require('prompt');
-// const dcrcoin = require('node-dcrcoin-rpc');
-const superagent = require('superagent');
 
 /** Program Version. */
 const version = "0.1";
@@ -41,11 +39,9 @@ const version = "0.1";
 const sleepInterval = 60; // 60 seconds.
 
 /** The name of the splitticketbuyer executable. */
-// TODO: Test that this is a valid file at startup.
 const splitBuyerProgram = "splitticketbuyer";
 
 /** The name of the drcctl executable. */
-// TODO: Test that this is a valid file at startup.
 const dcrctlProgram = "dcrctl";
 
 /** The amount of DCR to buy in a split ticket. */
@@ -67,7 +63,7 @@ const sourceAccount = 0; // TODO: make this configurable.
  * Prints the programs prelude and asks for consent.
  */
 const printPrelude = async function() {
-    console.log("Welcome to Decred Ticket Auto Splitter " +  "( " + version + ";)");
+    console.log("Welcome to Decred Ticket Auto Splitter " +  "( " + version + ")");
     console.log("");
     printBold("Any software that you supply your wallet passphrase to can potentially steal your funds.\n" +
         "Please make sure you know what you are doing.");
@@ -146,19 +142,8 @@ const runOnce = async function(password) {
 const hasFunds = async function() {
     const result = spawnSync(dcrctlProgram, ["--wallet", "getbalance"]);
 
-    // Program output is sometimes buffered by commas which prevents the output from parsing to valid JSON. Trim commas
-    // from both ends.
-    // TODO: Figure out why this is and consider replacing with a regexp.
-    var rawOutput = result.output.toString("utf8");
-    while (rawOutput.charAt(0) === ',') {
-        rawOutput = rawOutput.substr(1);
-    }
-    while (rawOutput.charAt(rawOutput.length - 1) === ',') {
-        rawOutput = rawOutput.substr(0, rawOutput.length - 1);
-    }
-
     // Parse program output to a JSON object.
-    const balances = JSON.parse(rawOutput);
+    const balances = JSON.parse(trimCommas(result.output.toString("utf8")));
     const fundsAvailable = balances["balances"][sourceAccount]["spendable"];
 
     if (!fundsAvailable) {
@@ -170,6 +155,48 @@ const hasFunds = async function() {
     return fundsAvailable >= buyAmount && fundsAvailable >= minAmount;
 };
 
+/** Verify that the required programs are in the PATH. */
+const verifyEnvironment = function() {
+    if (!verifyProgram(dcrctlProgram)) {
+        console.log("Could not find " + dcrctlProgram + ". (Try running `which " + dcrctlProgram + "`)");
+        return false;
+    }
+
+    if (!verifyProgram(splitBuyerProgram)) {
+        console.log("Could not find " + splitBuyerProgram + ". (Try running `which " + splitBuyerProgram + "`)");
+        return false;
+    }
+
+    return true;
+};
+
+/** Verify that a program is in the PATH. */
+const verifyProgram = function(program) {
+    const result = spawnSync("which", [program]);
+    var rawOutput = trimCommas(result.output.toString("utf8"));
+    if (rawOutput.length > 0) {
+        return true;
+    }
+    return false;
+};
+
+/**
+ * Trim commas from either end of a string.
+ *
+ * Program output is sometimes buffered by commas which prevents the output from parsing to valid JSON. Trim commas
+ * from both ends.
+ * TODO: Figure out why this is and consider replacing with a regexp.
+ */
+const trimCommas = function(string) {
+    while (string.charAt(0) === ',') {
+        string = string.substr(1);
+    }
+    while (string.charAt(string.length - 1) === ',') {
+        string = string.substr(0, string.length - 1);
+    }
+    return string;
+}
+
 /** Sleep for the provided number of seconds. */
 const sleep = async function(seconds){
     return new Promise(resolve=>{
@@ -179,6 +206,10 @@ const sleep = async function(seconds){
 
 /** Main runloop. */
 const main = async function() {
+    if (!verifyEnvironment()) {
+        return;
+    }
+
     const userConsented = await printPrelude();
     if (userConsented) {
         try {
