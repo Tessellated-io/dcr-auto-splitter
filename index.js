@@ -1,5 +1,5 @@
 /**
- * Auto Split Ticket buyer buys split decred tickets in increments of 5 tickets.
+ * Decred Ticket Auto Splitter  buys split decred tickets in increments of 5 DCR.
  *
  * This program will loop constantly until killed by the user. A future update will make it die when the user's balance
  * is exhausted. The wallet used is the first account in the open wallet.
@@ -40,19 +40,16 @@ const sessionName = "decredvoting1"; // TODO: make this configurable.
 /** The matcher host to use. */
 const matcherHost = "decredvoting.com"; // TODO: make this configurable.
 
-// TODO: Remove and inline.
-const projectName = "AutoSplit";
-
 /**
  * Prints the programs prelude and asks for consent.
  */
 const printPrelude = async function() {
-    console.log("Welcome to " + projectName + " (v " + version + ")");
+    console.log("Welcome to Decred Ticket Auto Splitter + " (v " + version + ")");
     console.log("");
     printBold("Any software that you supply your wallet passphrase to can potentially steal your funds.\n" +
         "Please make sure you know what you are doing.")
     printBold("The origin of this software is https://github.com/tessellatedgeometry/AutoSplit.");
-    printBold("The " + projectName + "software is considered EXPERIMENTAL software and is subject to several risks which might cause you to LOSE YOUR FUNDS.\n" +
+    printBold("The " + Decred Ticket Auto Splitter + "software is considered EXPERIMENTAL software and is subject to several risks which might cause you to LOSE YOUR FUNDS.\n" +
         "By continuing past this point you agree that you are aware of the risks and and is running the sofware AT YOUR OWN RISK.")
 
     return new Promise(function(resolve) {
