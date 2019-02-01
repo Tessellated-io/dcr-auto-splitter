@@ -1,7 +1,18 @@
 /**
  * Decred Ticket Auto Splitter  buys split decred tickets in increments of 5 DCR.
  *
- * This program will loop constantly until killed by the user. A future update will make it die when the user's balance
+ * This program will loop constantly until killed by the user. It will deplete ALL funds in the wallet if left to its
+ * own devices.
+ *
+ * PLEASE NOTE THE FOLLOWING BEFORE RUNNING THE PROGRAM:
+ * - The buying increment is 5 DCR.
+ * - The stakepool being used is 'decredvoting.com'.
+ * - The split group is 'decredvoting1'
+ * - The source wallet is the first wallet in the open wallet.
+ * You can customize these parameters by modifying the global variables. A future update will allow customization at
+ * runtime.
+ *
+ * A future update will make it die when the user's balance
  * is exhausted. The wallet used is the first account in the open wallet.
  *
  * This software is experimental code and you can potentially lose your funds by running it. You use this software at your
@@ -14,7 +25,9 @@ const readline = require('readline').createInterface({
     input: process.stdin,
     output: process.stdout
 });
-var prompt = require('prompt');
+const prompt = require('prompt');
+// const dcrcoin = require('node-dcrcoin-rpc');
+const superagent = require('superagent');
 
 /** Program Version. */
 const version = "0.1";
@@ -31,14 +44,24 @@ const sleepInterval = 60; // 60 seconds.
 // TODO: Test that this is a valid file at startup.
 const splitBuyerProgram = "splitticketbuyer";
 
-/** The amount of each buy which will occur. */
-const amount = 5; // TODO: Make configurable.
+/** The name of the drcctl executable. */
+// TODO: Test that this is a valid file at startup.
+const dcrctlProgram = "dcrctl";
+
+/** The amount of DCR to buy in a split ticket. */
+const buyAmount = 5; // TODO: Make configurable.
+
+/** The minimum buyAmount of funds needed. */
+const minAmount = 5;
 
 /** The session name to use. */
 const sessionName = "decredvoting1"; // TODO: make this configurable.
 
 /** The matcher host to use. */
 const matcherHost = "decredvoting.com"; // TODO: make this configurable.
+
+/** Source account to use. */
+const sourceAccount = 0; // TODO: make this configurable.
 
 /**
  * Prints the programs prelude and asks for consent.
@@ -49,8 +72,8 @@ const printPrelude = async function() {
     printBold("Any software that you supply your wallet passphrase to can potentially steal your funds.\n" +
         "Please make sure you know what you are doing.");
     printBold("The origin of this software is https://github.com/tessellatedgeometry/AutoSplit.");
-    printBold("The " + Decred; Ticket; Auto; Splitter + "software is considered EXPERIMENTAL software and is subject to several risks which might cause you to LOSE YOUR FUNDS.\n" +
-        "By continuing past this point you agree that you are aware of the risks and and is running the sofware AT YOUR OWN RISK.";)
+    printBold("The  Decred Ticket Auto Splitter software is considered EXPERIMENTAL software and is subject to several risks which might cause you to LOSE YOUR FUNDS.\n" +
+        "By continuing past this point you agree that you are aware of the risks and and is running the sofware AT YOUR OWN RISK.");
 
     return new Promise(function(resolve) {
         readline.question("Do you accept the risks of running this software? (Type 'yes' to continue, type anything else to quit)\n", (resp) => {
@@ -108,10 +131,10 @@ const runOnce = async function(password) {
         const args = [
             "--pass=" + password,
             "--matcher.host=decredvoting.com",
-            "--sourceaccount=0",
+            "--sourceaccount=" + sourceAccount,
             "--wallet.host=127.0.0.1:0",
             "--sessionname=" + sessionName,
-            "--maxamount=" + amount
+            "--maxamount=" + buyAmount
         ];
 
         spawnSync(splitBuyerProgram, args, {stdio: 'inherit'});
@@ -121,8 +144,30 @@ const runOnce = async function(password) {
 
 /** Check if the the user has funds left to keep buying. */
 const hasFunds = async function() {
-    // TODO: Implement this function to make an RPC to the wallet.
-    return true;
+    const result = spawnSync(dcrctlProgram, ["--wallet", "getbalance"]);
+
+    // Program output is sometimes buffered by commas which prevents the output from parsing to valid JSON. Trim commas
+    // from both ends.
+    // TODO: Figure out why this is and consider replacing with a regexp.
+    var rawOutput = result.output.toString("utf8");
+    while (rawOutput.charAt(0) === ',') {
+        rawOutput = rawOutput.substr(1);
+    }
+    while (rawOutput.charAt(rawOutput.length - 1) === ',') {
+        rawOutput = rawOutput.substr(0, rawOutput.length - 1);
+    }
+
+    // Parse program output to a JSON object.
+    const balances = JSON.parse(rawOutput);
+    const fundsAvailable = balances["balances"][sourceAccount]["spendable"];
+
+    if (!fundsAvailable) {
+        console.log("Error parsing available funds.");
+        console.log("Got: " + result.output.toString("utf8"));
+        return false;
+    }
+
+    return fundsAvailable >= buyAmount && fundsAvailable >= minAmount;
 };
 
 /** Sleep for the provided number of seconds. */
