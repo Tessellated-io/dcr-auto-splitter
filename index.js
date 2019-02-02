@@ -121,7 +121,7 @@ const getPassword = async function() {
 };
 
 /** Run splitticketbuyer one time. */
-const runOnce = async function(password, buyAmount) {
+const runOnce = async function(password, buyAmount) {  
     return new Promise(function(resolve) {
         const args = [
             "--pass=" + password,
@@ -143,7 +143,7 @@ const hasFunds = async function(buyAmount) {
 
     // Parse program output to a JSON object.
     const balances = JSON.parse(trimCommas(result.output.toString("utf8")));
-    const fundsAvailable = balances["balances"][sourceAccount]["spendable"];
+    const fundsAvailable = balances["balances"][sourceAccount]["total"];
 
     if (!fundsAvailable) {
         console.log("Error parsing available funds.");
@@ -222,7 +222,7 @@ const main = async function() {
             console.log("Your funds are depleted. Exiting program.");
         } catch (error) {
             console.log("Error: " + error);
-            console.log("Exiting " + projectName);
+            console.log("Exiting Decred Ticket Autosplitter");
         }
     }
 };
