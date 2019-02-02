@@ -215,12 +215,15 @@ const main = async function() {
         try {
            const result = await getPassword();
 
-            while (await hasFunds(result.buyAmount)) {
+            while (true) {
+              if (await hasFunds(result.buyAmount)) {
                 await runOnce(result.password, result.buyAmount);
-                console.log("Taking " + sleepInterval + " seconds before trying again.");
-                await sleep(sleepInterval);
+              } else {
+                console.log("Insufficient funds");
+              }
+              console.log("Taking " + sleepInterval + " seconds before trying again.");
+              await sleep(sleepInterval);
             }
-            console.log("Your funds are depleted. Exiting program.");
         } catch (error) {
             console.log("Error: " + error);
             console.log("Exiting Decred Ticket Autosplitter");
