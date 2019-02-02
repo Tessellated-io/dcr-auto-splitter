@@ -142,12 +142,13 @@ const hasFunds = async function(buyAmount) {
     const result = spawnSync(dcrctlProgram, ["--wallet", "getbalance"]);
 
     // Parse program output to a JSON object.
-    const balances = JSON.parse(trimCommas(result.output.toString("utf8")));
+    const rawOutput = trimCommas(result.output.toString("utf8"));
+    const balances = JSON.parse(rawOutput);
     const fundsAvailable = balances["balances"][sourceAccount]["total"];
 
     if (!fundsAvailable) {
         console.log("Error parsing available funds.");
-        console.log("Got: " + result.output.toString("utf8"));
+        console.log("Got: " + rawOutput);
         return false;
     }
 
