@@ -104,6 +104,9 @@ const getPassword = async function() {
                 buyAmount: {
                     message: "Please enter the amount of DCR to buy in each ticket split:",
                 },
+                port: {
+                  message: "Please enter the port to for the wallet:",
+                }
             }
         };
 
@@ -121,13 +124,13 @@ const getPassword = async function() {
 };
 
 /** Run splitticketbuyer one time. */
-const runOnce = async function(password, buyAmount) {  
+const runOnce = async function(password, buyAmount, port) {  
     return new Promise(function(resolve) {
         const args = [
             "--pass=" + password,
             "--matcher.host=decredvoting.com",
             "--sourceaccount=" + sourceAccount,
-            "--wallet.host=127.0.0.1:0",
+            "--wallet.host=127.0.0.1:" + port,
             "--sessionname=" + sessionName,
             "--maxamount=" + buyAmount
         ];
@@ -217,7 +220,8 @@ const main = async function() {
 
             while (true) {
               if (await hasFunds(result.buyAmount)) {
-                await runOnce(result.password, result.buyAmount);
+                console.log("Sufficient funds found!");
+                await runOnce(result.password, result.buyAmount, result.port);
               } else {
                 console.log("Insufficient funds");
               }
